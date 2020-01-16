@@ -1,8 +1,15 @@
 const Devs = require('../models/Devs')
-
+const jwt = require('jsonwebtoken');
 const axios = require('axios');
-
 const parseStringAsArray = require('../../utils/parseStringAsArray')
+
+const authConfig = require('../../config/auth')
+
+function generateToken(params = {}) {
+  return jwt.sign(params, authConfig.secret, {
+    expiresIn: 7200,
+  });
+}
 
 module.exports = {
 
@@ -25,12 +32,13 @@ module.exports = {
   },
 
   async store(req, res) {
-    const { github_username, techs, latitude, longitude } = req.body;
+    const { github_username, techs, latitude, longitude, password } = req.body;
 
     try {
       let dev = await Devs.findOne({ github_username });
 
       if (!dev) {
+
         const apiResponse = await axios.get(`https://api.github.com/users/${github_username}`);
 
         const { name = login, avatar_url, bio } = apiResponse.data;
@@ -47,12 +55,18 @@ module.exports = {
           name,
           avatar_url,
           bio,
+          password,
           techs: techsArray,
           location
         })
       }
 
-      return res.json(dev);
+      dev.password = undefined;
+
+      return res.json({
+        dev,
+        token: generateToken({ id: dev.id })
+      });
     } catch (err) {
       res.status(400).json({ err: "Error creating this dev"})
     }
