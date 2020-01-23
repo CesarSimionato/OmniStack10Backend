@@ -5,7 +5,8 @@ const DevsController = require('../controllers/DevsController')
 
 const routes = express.Router();
 
-routes.get('/', AuthController.store);
-routes.post('/', DevsController.store);
+routes.post('/signIn', AuthController.store);
+
+routes.post('/signUp', DevsController.store);
 
 module.exports = app => app.use('/auth', routes);

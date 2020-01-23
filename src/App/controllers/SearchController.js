@@ -4,26 +4,53 @@ const parseStringAsArray = require('../../utils/parseStringAsArray')
 
 module.exports = {
   async index(req, res) {
-    
-    const { latitude, longitude, techs } = req.query;
 
-    const techsArray = parseStringAsArray(techs)
+    try {
 
-    const devs = await Devs.find({
-      techs: {
-        $in: techsArray
-      },
-      location: {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [longitude, latitude]
-          },
-          $maxDistance: 10000
-        }
+      let devs;
+
+      const { latitude, longitude, techs } = req.query;
+
+      if (techs) {
+        const techsArray = parseStringAsArray(techs);
+
+        devs = await Devs.find(
+          {
+            techs: {
+              $in: techsArray
+            },
+            // location: {
+            //   $near: {
+            //     $geometry: {
+            //       type: 'Point',
+            //       coordinates: [longitude, latitude]
+            //     },
+            //     $maxDistance: 10000
+            //   }
+            // }
+          }
+        )
+
+      } else {
+        devs = await Devs.find(
+          // {
+          //   location: {
+          //     $near: {
+          //       $geometry: {
+          //         type: 'Point',
+          //         coordinates: [longitude, latitude]
+          //       },
+          //       $maxDistance: 10000
+          //     }
+          //   }
+          // }
+        )
       }
-    })
 
-    return res.json({ devs });
+      return res.json({ devs });
+
+    } catch (err) {
+      res.status(400).send({ erro: "Error while searching" })
+    }
   }
 }
